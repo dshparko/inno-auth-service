@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConversionException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,9 +27,35 @@ import java.util.UUID;
 @ControllerAdvice
 public class ApiErrorHandler {
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponseDto> handleAuthentication(AuthenticationException ex,
+                                                                 HttpServletRequest request) {
+        ErrorResponseDto response = new ErrorResponseDto(
+                HttpStatus.UNAUTHORIZED.value(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                UUID.randomUUID()
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleAccessDenied(AccessDeniedException ex,
+                                                               HttpServletRequest request) {
+        ErrorResponseDto response = new ErrorResponseDto(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                UUID.randomUUID()
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
     @ExceptionHandler(ResourceAlreadyUsedException.class)
     public ResponseEntity<ErrorResponseDto> handleResourceAlreadyUsed(ResourceAlreadyUsedException ex,
-                                                     HttpServletRequest request) {
+                                                                      HttpServletRequest request) {
         ErrorResponseDto response = new ErrorResponseDto(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage(),
@@ -37,6 +65,7 @@ public class ApiErrorHandler {
 
         return ResponseEntity.badRequest().body(response);
     }
+
     /**
      * Handles domain-specific not found exceptions such as {@link ResourceNotFoundException} .
      * Constructs a standardized {@link ErrorResponseDto} with HTTP 404 status.
