@@ -17,6 +17,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.innowise.authservice.secutiry.AuthConstant.AUTH_HEADER;
+import static com.innowise.authservice.secutiry.AuthConstant.TOKEN_PREFIX;
+
 /**
  * @ClassName JwtFilter
  * @Description Security filter responsible for extracting and validating JWT tokens from incoming requests.
@@ -38,9 +41,9 @@ public class JwtFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader(AUTH_HEADER);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith(TOKEN_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }

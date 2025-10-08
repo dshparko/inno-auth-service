@@ -1,6 +1,6 @@
 package com.innowise.authservice.secutiry.impl;
 
-import com.innowise.authservice.exception.ResourceNotFoundException;
+import com.innowise.authservice.exception.AuthServiceException;
 import com.innowise.authservice.secutiry.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +9,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+
+import static com.innowise.authservice.secutiry.AuthConstant.DEFAULT_ALGORITHM;
 
 /**
  * @ClassName SaltedPasswordEncoder
@@ -22,14 +24,15 @@ public class SaltedPasswordEncoder implements PasswordEncoder {
 
     private final MessageDigest digest;
 
-
     public SaltedPasswordEncoder() {
         try {
-            this.digest = MessageDigest.getInstance("SHA-256");
+            this.digest = MessageDigest.getInstance(DEFAULT_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
-            throw new ResourceNotFoundException("SHA-256 not available", e);
+            throw new AuthServiceException("Unable to initialize password encoder: " + DEFAULT_ALGORITHM +
+                    " algorithm is not available", e);
         }
     }
+
 
     public String generateSalt() {
         byte[] saltBytes = new byte[16];

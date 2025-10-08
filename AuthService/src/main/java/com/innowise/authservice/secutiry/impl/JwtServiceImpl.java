@@ -1,5 +1,6 @@
 package com.innowise.authservice.secutiry.impl;
 
+import com.innowise.authservice.model.RoleEnum;
 import com.innowise.authservice.secutiry.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -50,7 +51,7 @@ public class JwtServiceImpl implements JwtService {
         claims.put("role", user.getAuthorities().stream()
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
-                .orElse("USER"));
+                .orElse(RoleEnum.USER.name()));
 
         return Jwts.builder()
                 .setClaims(claims)

@@ -2,6 +2,7 @@ package com.innowise.authservice.service.impl;
 
 import com.innowise.authservice.exception.InvalidResourceException;
 import com.innowise.authservice.exception.ResourceNotFoundException;
+import com.innowise.authservice.model.RoleEnum;
 import com.innowise.authservice.model.dto.TokenInfo;
 import com.innowise.authservice.secutiry.PasswordEncoder;
 import com.innowise.authservice.model.dto.LoginDto;
@@ -64,10 +65,10 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Role " + requestedRole + " was not found"));
 
         String creatorRole = (token == null || token.isBlank())
-                ? "USER"
+                ? RoleEnum.USER.name()
                 : jwtService.extractRole(token);
 
-        if ("ADMIN".equals(requestedRole) && !"ADMIN".equals(creatorRole)) {
+        if (RoleEnum.ADMIN.name().equals(requestedRole) && !RoleEnum.ADMIN.name().equals(creatorRole)) {
             throw new AccessDeniedException("Only ADMIN can register ADMIN users");
         }
 

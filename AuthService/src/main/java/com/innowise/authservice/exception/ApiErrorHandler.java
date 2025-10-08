@@ -27,6 +27,19 @@ import java.util.UUID;
 @ControllerAdvice
 public class ApiErrorHandler {
 
+    @ExceptionHandler(AuthServiceException.class)
+    public ResponseEntity<ErrorResponseDto> handleAuthServiceException(AuthServiceException ex,
+                                                                 HttpServletRequest request) {
+        ErrorResponseDto response = new ErrorResponseDto(
+                HttpStatus.UNAUTHORIZED.value(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                UUID.randomUUID()
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDto> handleAuthentication(AuthenticationException ex,
                                                                  HttpServletRequest request) {

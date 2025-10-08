@@ -2,6 +2,7 @@ package com.innowise.authservice.exception;
 
 import lombok.Getter;
 
+import java.io.Serial;
 import java.util.UUID;
 
 /**
@@ -13,6 +14,7 @@ import java.util.UUID;
  */
 public class InvalidResourceException extends RuntimeException {
     @Getter
+    @Serial
     private final UUID errorId = UUID.randomUUID();
 
     public InvalidResourceException(String message) {

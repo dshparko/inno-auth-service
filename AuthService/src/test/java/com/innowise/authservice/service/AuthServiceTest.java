@@ -2,6 +2,7 @@ package com.innowise.authservice.service;
 
 import com.innowise.authservice.exception.InvalidResourceException;
 import com.innowise.authservice.exception.ResourceNotFoundException;
+import com.innowise.authservice.model.RoleEnum;
 import com.innowise.authservice.model.dto.AuthDto;
 import com.innowise.authservice.model.dto.AuthenticationResponse;
 import com.innowise.authservice.model.dto.LoginDto;
@@ -82,12 +83,12 @@ class AuthServiceTest {
 
     @Test
     void register_shouldThrow_whenAdminRegistersAdminWithoutAdminRole() {
-        AuthDto request = new AuthDto("new@example.com", "pass", "ADMIN");
+        AuthDto request = new AuthDto("new@example.com", "pass", RoleEnum.ADMIN.name());
         Role role = new Role();
-        role.setName("ADMIN");
+        role.setName(RoleEnum.ADMIN.name());
 
-        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(role));
-        when(jwtService.extractRole(anyString())).thenReturn("USER");
+        when(roleRepository.findByName(RoleEnum.ADMIN.name())).thenReturn(Optional.of(role));
+        when(jwtService.extractRole(anyString())).thenReturn(RoleEnum.USER.name());
 
         assertThrows(AccessDeniedException.class, () -> authService.register(request, "Bearer token"));
     }
@@ -98,13 +99,13 @@ class AuthServiceTest {
 
         when(jwtService.isTokenExpired("valid-token")).thenReturn(false);
         when(jwtService.extractEmail("valid-token")).thenReturn("user@example.com");
-        when(jwtService.extractRole("valid-token")).thenReturn("USER");
-        when(jwtService.isTokenValid("valid-token", "user@example.com", "USER")).thenReturn(true);
+        when(jwtService.extractRole("valid-token")).thenReturn(RoleEnum.USER.name());
+        when(jwtService.isTokenValid("valid-token", "user@example.com", RoleEnum.USER.name())).thenReturn(true);
 
         TokenInfo info = authService.validate(payload);
 
         assertEquals("user@example.com", info.email());
-        assertEquals("USER", info.role());
+        assertEquals(RoleEnum.USER.name(), info.role());
     }
 
     @Test
@@ -112,8 +113,8 @@ class AuthServiceTest {
         TokenPayload payload = new TokenPayload("refresh-token");
 
         when(jwtService.extractEmail("refresh-token")).thenReturn("user@example.com");
-        when(jwtService.extractRole("refresh-token")).thenReturn("USER");
-        when(jwtService.isTokenValid("refresh-token", "user@example.com", "USER")).thenReturn(true);
+        when(jwtService.extractRole("refresh-token")).thenReturn(RoleEnum.USER.name());
+        when(jwtService.isTokenValid("refresh-token", "user@example.com", RoleEnum.USER.name())).thenReturn(true);
 
         User user = new User();
         when(userService.findByEmail("user@example.com")).thenReturn(user);
@@ -140,8 +141,8 @@ class AuthServiceTest {
         TokenPayload payload = new TokenPayload("invalid-token");
 
         when(jwtService.extractEmail("invalid-token")).thenReturn("user@example.com");
-        when(jwtService.extractRole("invalid-token")).thenReturn("USER");
-        when(jwtService.isTokenValid("invalid-token", "user@example.com", "USER")).thenReturn(false);
+        when(jwtService.extractRole("invalid-token")).thenReturn(RoleEnum.USER.name());
+        when(jwtService.isTokenValid("invalid-token", "user@example.com", RoleEnum.USER.name())).thenReturn(false);
 
         assertThrows(InvalidResourceException.class, () -> authService.refresh(payload));
     }
