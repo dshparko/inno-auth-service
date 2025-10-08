@@ -2,6 +2,7 @@ package com.innowise.authservice.repository;
 
 import com.innowise.authservice.model.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
  * @Date 05.10.2025 15:51
  * @Version 1.0
  */
+@Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
     /**

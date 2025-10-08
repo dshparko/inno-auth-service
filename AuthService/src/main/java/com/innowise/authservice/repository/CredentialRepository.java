@@ -2,6 +2,7 @@ package com.innowise.authservice.repository;
 
 import com.innowise.authservice.model.entity.Credential;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
  * @Date 07.10.2025 15:11
  * @Version 1.0
  */
+@Repository
 public interface CredentialRepository extends JpaRepository<Credential, Long> {
     /**
      * Finds a credential by its associated email.
