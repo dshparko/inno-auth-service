@@ -31,7 +31,7 @@ public class ApiErrorHandler {
     public ResponseEntity<ErrorResponseDto> handleAuthServiceException(AuthServiceException ex,
                                                                  HttpServletRequest request) {
         ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.NOT_FOUND.value(),
                 ex.getMessage(),
                 request.getRequestURI(),
                 UUID.randomUUID()
