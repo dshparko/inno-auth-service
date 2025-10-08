@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @ClassName Role
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @NoArgsConstructor
+@Setter
 @Getter
 @Table(name = "roles")
 public class Role {
