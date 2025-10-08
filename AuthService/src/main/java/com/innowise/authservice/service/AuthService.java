@@ -3,6 +3,7 @@ package com.innowise.authservice.service;
 import com.innowise.authservice.model.dto.AuthDto;
 import com.innowise.authservice.model.dto.AuthenticationResponse;
 import com.innowise.authservice.model.dto.LoginDto;
+import com.innowise.authservice.model.dto.TokenInfo;
 import com.innowise.authservice.model.dto.TokenPayload;
 
 /**
@@ -37,7 +38,7 @@ public interface AuthService {
      * @param token payload containing JWT
      * @return email extracted from token
      */
-    String validate(TokenPayload token);
+    TokenInfo validate(TokenPayload token);
 
     /**
      * Refreshes access and refresh tokens using a valid refresh token.

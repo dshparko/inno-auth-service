@@ -65,14 +65,18 @@ public class JwtServiceImpl implements JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public boolean isTokenValid(String token, String email) {
+    public boolean isTokenValid(String token, String expectedEmail, String expectedRole) {
         String extractedEmail = extractEmail(token);
+        String extractedRole = extractRole(token);
+
         return extractedEmail != null
-                && extractedEmail.equals(email)
+                && extractedRole != null
+                && extractedEmail.equals(expectedEmail)
+                && extractedRole.equals(expectedRole)
                 && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         Date expiration = extractClaim(token, Claims::getExpiration);
         return expiration.before(new Date());
     }
@@ -81,6 +85,7 @@ public class JwtServiceImpl implements JwtService {
         Claims claims = extractAllClaims(token);
         return resolver.apply(claims);
     }
+
     public String extractRole(String token) {
         return extractAllClaims(token).get("role", String.class);
     }

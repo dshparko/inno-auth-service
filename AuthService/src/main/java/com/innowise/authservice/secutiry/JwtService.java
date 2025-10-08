@@ -47,13 +47,14 @@ public interface JwtService {
     String extractRole(String token);
 
     /**
-     * Validates the token against the expected email and expiration.
+     * Validates the token against the expected email, role and expiration.
      *
      * @param token the JWT token
      * @param email the expected email
+     * @param role the expected role
      * @return true if valid, false otherwise
      */
-    boolean isTokenValid(String token, String email);
+    boolean isTokenValid(String token, String email, String role);
 
     /**
      * Extracts a specific claim from the token using a resolver function.
@@ -64,5 +65,13 @@ public interface JwtService {
      * @return extracted claim value
      */
     <T> T extractClaim(String token, Function<Claims, T> resolver);
+
+    /**
+     * Check if the token has expired from the given token.
+     *
+     * @param token the JWT token
+     * @return true if expired, false otherwise
+     */
+    boolean isTokenExpired(String token);
 }
 

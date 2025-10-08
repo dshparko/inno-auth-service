@@ -2,7 +2,8 @@ package com.innowise.authservice.service.impl;
 
 import com.innowise.authservice.exception.InvalidResourceException;
 import com.innowise.authservice.exception.ResourceNotFoundException;
-import com.innowise.authservice.secutiry.impl.SaltedPasswordEncoder;
+import com.innowise.authservice.model.dto.TokenInfo;
+import com.innowise.authservice.secutiry.PasswordEncoder;
 import com.innowise.authservice.model.dto.LoginDto;
 import com.innowise.authservice.model.dto.AuthDto;
 import com.innowise.authservice.model.entity.Credential;
@@ -35,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final RoleRepository roleRepository;
     private final CredentialRepository credentialRepository;
-    private final SaltedPasswordEncoder encoder;
+    private final PasswordEncoder encoder;
 
 
     public AuthenticationResponse login(LoginDto request) {
@@ -73,22 +74,25 @@ public class AuthServiceImpl implements AuthService {
         userService.register(request.email(), request.password(), role);
     }
 
-    public String validate(TokenPayload token) {
-        String email = jwtService.extractEmail(token.token());
+    public TokenInfo validate(TokenPayload token) {
+        String rawToken = extractRawToken(token);
+        validateExpiration(rawToken);
 
-        if (!jwtService.isTokenValid(token.token(), email)) {
-            throw new InvalidResourceException("Invalid or expired token");
-        }
+        String email = extractAndValidateEmail(rawToken);
+        String role = extractAndValidateRole(rawToken);
 
-        return email;
+        validateClaims(rawToken, email, role);
+
+        return new TokenInfo(email, role);
     }
 
 
     public AuthenticationResponse refresh(TokenPayload request) {
         String token = request.token();
         String email = jwtService.extractEmail(token);
+        String role = jwtService.extractRole(token);
 
-        if (!jwtService.isTokenValid(token, email)) {
+        if (!jwtService.isTokenValid(token, email, role)) {
             throw new InvalidResourceException("Refresh token is invalid");
         }
 
@@ -106,5 +110,44 @@ public class AuthServiceImpl implements AuthService {
                 ? authHeader.substring(7)
                 : null;
     }
+
+    private String extractRawToken(TokenPayload token) {
+        String rawToken = token.token();
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new InvalidResourceException("Token is missing or empty");
+        }
+        return rawToken;
+    }
+
+
+    private void validateExpiration(String token) {
+        if (jwtService.isTokenExpired(token)) {
+            throw new InvalidResourceException("Token has expired");
+        }
+    }
+
+
+    private String extractAndValidateEmail(String token) {
+        String email = jwtService.extractEmail(token);
+        if (email == null || email.isBlank()) {
+            throw new InvalidResourceException("Token does not contain a valid email");
+        }
+        return email;
+    }
+
+    private String extractAndValidateRole(String token) {
+        String role = jwtService.extractRole(token);
+        if (role == null || role.isBlank()) {
+            throw new InvalidResourceException("Token does not contain a valid role");
+        }
+        return role;
+    }
+
+    private void validateClaims(String token, String expectedEmail, String expectedRole) {
+        if (!jwtService.isTokenValid(token, expectedEmail, expectedRole)) {
+            throw new InvalidResourceException("Token is invalid");
+        }
+    }
+
 
 }

@@ -53,7 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
             UserPrincipal principal = UserPrincipal.of(user);
 
 
-            if (jwtService.isTokenValid(token, principal.getUsername())) {
+            if (jwtService.isTokenValid(token, principal.getUsername(), principal.getAuthorities().toString())) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(user, null, principal.getAuthorities());
 

@@ -2,7 +2,7 @@ package com.innowise.authservice.service.impl;
 
 import com.innowise.authservice.exception.ResourceAlreadyUsedException;
 import com.innowise.authservice.exception.ResourceNotFoundException;
-import com.innowise.authservice.secutiry.impl.SaltedPasswordEncoder;
+import com.innowise.authservice.secutiry.PasswordEncoder;
 import com.innowise.authservice.model.entity.Credential;
 import com.innowise.authservice.model.entity.Role;
 import com.innowise.authservice.model.entity.User;
@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
 
     private final CredentialRepository credentialRepository;
     private final UserRepository userRepository;
-    private final SaltedPasswordEncoder encoder;
+    private final PasswordEncoder encoder;
 
     public void register(String email, String rawPassword, Role role) {
         if (credentialRepository.existsByEmail(email)) {

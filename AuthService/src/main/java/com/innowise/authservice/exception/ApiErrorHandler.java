@@ -66,6 +66,19 @@ public class ApiErrorHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @ExceptionHandler(InvalidResourceException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceAlreadyUsed(InvalidResourceException ex,
+                                                                      HttpServletRequest request) {
+        ErrorResponseDto response = new ErrorResponseDto(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                UUID.randomUUID()
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
     /**
      * Handles domain-specific not found exceptions such as {@link ResourceNotFoundException} .
      * Constructs a standardized {@link ErrorResponseDto} with HTTP 404 status.

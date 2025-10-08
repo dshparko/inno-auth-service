@@ -3,6 +3,7 @@ package com.innowise.authservice.controller;
 import com.innowise.authservice.model.dto.AuthDto;
 import com.innowise.authservice.model.dto.AuthenticationResponse;
 import com.innowise.authservice.model.dto.LoginDto;
+import com.innowise.authservice.model.dto.TokenInfo;
 import com.innowise.authservice.model.dto.TokenPayload;
 import com.innowise.authservice.service.AuthService;
 import jakarta.validation.Valid;
@@ -42,7 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<String> validate(@RequestBody @Valid TokenPayload token) {
+    public ResponseEntity<TokenInfo> validate(@RequestBody @Valid TokenPayload token) {
         return ResponseEntity.ok(authService.validate(token));
     }
 
