@@ -11,7 +11,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,66 +26,43 @@ import java.util.UUID;
 @ControllerAdvice
 public class ApiErrorHandler {
 
+    private ErrorResponseDto buildErrorResponse(HttpStatus status, String message, String path) {
+        return new ErrorResponseDto(
+                status.value(),
+                message,
+                path,
+                UUID.randomUUID()
+        );
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDto> handleAuthentication(AuthenticationException ex,
                                                                  HttpServletRequest request) {
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.UNAUTHORIZED.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                UUID.randomUUID()
-        );
-
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponseDto> handleAccessDenied(AccessDeniedException ex,
                                                                HttpServletRequest request) {
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.FORBIDDEN.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                UUID.randomUUID()
-        );
-
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler(ResourceAlreadyUsedException.class)
     public ResponseEntity<ErrorResponseDto> handleResourceAlreadyUsed(ResourceAlreadyUsedException ex,
                                                                       HttpServletRequest request) {
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                UUID.randomUUID()
-        );
-
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI()));
     }
 
     @ExceptionHandler(InvalidResourceException.class)
-    public ResponseEntity<ErrorResponseDto> handleResourceAlreadyUsed(InvalidResourceException ex,
-                                                                      HttpServletRequest request) {
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                UUID.randomUUID()
-        );
-
-        return ResponseEntity.badRequest().body(response);
+    public ResponseEntity<ErrorResponseDto> handleInvalidResource(InvalidResourceException ex,
+                                                                  HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI()));
     }
 
-    /**
-     * Handles domain-specific not found exceptions such as {@link ResourceNotFoundException} .
-     * Constructs a standardized {@link ErrorResponseDto} with HTTP 404 status.
-     *
-     * @param ex      the thrown exception
-     * @param request the originating HTTP request
-     * @return HTTP 404 Not Found with error details
-     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleNotFound(ResourceNotFoundException ex,
                                                            HttpServletRequest request) {
@@ -96,17 +72,9 @@ public class ApiErrorHandler {
                 request.getRequestURI(),
                 ex.getErrorId()
         );
-
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    /**
-     * Handles validation errors triggered by {@code @Valid} annotated request bodies.
-     * Converts field-level errors into a list of {@link ValidationErrorDto} for client-side feedback.
-     *
-     * @param ex the validation exception containing binding results
-     * @return HTTP 400 Bad Request with detailed validation errors
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ValidationErrorDto>> handleValidationErrors(MethodArgumentNotValidException ex) {
         List<ValidationErrorDto> errors = ex.getBindingResult()
@@ -122,46 +90,18 @@ public class ApiErrorHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    /**
-     * Handles malformed JSON or unreadable request bodies.
-     *
-     * @param ex      the exception indicating unreadable input
-     * @param request the originating HTTP request
-     * @return HTTP 400 Bad Request with error message
-     */
     @ExceptionHandler(HttpMessageConversionException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponseDto> handleBadRequest(HttpMessageConversionException ex,
                                                              HttpServletRequest request) {
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                UUID.randomUUID()
-        );
-
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI()));
     }
 
-
-    /**
-     * Handles all uncaught exceptions not explicitly mapped.
-     *
-     * @param ex      the thrown exception
-     * @param request the originating HTTP request
-     * @return HTTP 500 Internal Server Error with error details
-     */
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponseDto> handleOther(Exception ex,
                                                         HttpServletRequest request) {
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                UUID.randomUUID()
-        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI()));
 
-        return ResponseEntity.internalServerError().body(response);
     }
 }
