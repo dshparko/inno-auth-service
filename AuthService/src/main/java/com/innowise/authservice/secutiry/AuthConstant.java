@@ -14,4 +14,6 @@ public final class AuthConstant {
     public static final String AUTH_HEADER = "Authorization";
     public static final String TOKEN_PREFIX = "Bearer ";
     public static final String DEFAULT_ALGORITHM = "SHA-256";
+    public static final String ACCESS_TYPE = "access";
+    public static final String REFRESH_TYPE = "refresh";
 }

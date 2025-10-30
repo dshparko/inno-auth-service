@@ -3,19 +3,19 @@ package com.innowise.authservice.service.impl;
 import com.innowise.authservice.exception.InvalidResourceException;
 import com.innowise.authservice.exception.ResourceNotFoundException;
 import com.innowise.authservice.model.RoleEnum;
-import com.innowise.authservice.model.dto.TokenInfo;
-import com.innowise.authservice.secutiry.PasswordEncoder;
-import com.innowise.authservice.model.dto.LoginDto;
 import com.innowise.authservice.model.dto.AuthDto;
+import com.innowise.authservice.model.dto.AuthenticationResponse;
+import com.innowise.authservice.model.dto.LoginDto;
+import com.innowise.authservice.model.dto.TokenInfo;
+import com.innowise.authservice.model.dto.TokenPayload;
 import com.innowise.authservice.model.entity.Credential;
 import com.innowise.authservice.model.entity.Role;
-import com.innowise.authservice.secutiry.JwtService;
-import com.innowise.authservice.secutiry.impl.UserPrincipal;
+import com.innowise.authservice.model.entity.User;
 import com.innowise.authservice.repository.CredentialRepository;
 import com.innowise.authservice.repository.RoleRepository;
-import com.innowise.authservice.model.dto.AuthenticationResponse;
-import com.innowise.authservice.model.dto.TokenPayload;
-import com.innowise.authservice.model.entity.User;
+import com.innowise.authservice.secutiry.JwtService;
+import com.innowise.authservice.secutiry.PasswordEncoder;
+import com.innowise.authservice.secutiry.impl.UserPrincipal;
 import com.innowise.authservice.service.AuthService;
 import com.innowise.authservice.service.UserService;
 import lombok.AllArgsConstructor;
@@ -59,20 +59,20 @@ public class AuthServiceImpl implements AuthService {
 
     public void register(AuthDto request, String authHeader) {
         String token = extractToken(authHeader);
-        String requestedRole = request.role().toUpperCase();
+        String requestedRoleName = request.getCredentials().role().toUpperCase();
 
-        Role role = roleRepository.findByName(requestedRole)
-                .orElseThrow(() -> new ResourceNotFoundException("Role " + requestedRole + " was not found"));
+        Role role = roleRepository.findByName(requestedRoleName)
+                .orElseThrow(() -> new ResourceNotFoundException("Role '%s' was not found".formatted(requestedRoleName)));
 
-        String creatorRole = (token == null || token.isBlank())
-                ? RoleEnum.USER.name()
-                : jwtService.extractRole(token);
+        String creatorRoleName = resolveCreatorRole(token);
 
-        if (RoleEnum.ADMIN.name().equals(requestedRole) && !RoleEnum.ADMIN.name().equals(creatorRole)) {
-            throw new AccessDeniedException("Only ADMIN can register ADMIN users");
-        }
+        validateRoleAssignment(requestedRoleName, creatorRoleName);
 
-        userService.register(request.email(), request.password(), role);
+        userService.register(
+                request,
+                role,
+                token
+        );
     }
 
     public TokenInfo validate(TokenPayload token) {
@@ -81,10 +81,11 @@ public class AuthServiceImpl implements AuthService {
 
         String email = extractAndValidateEmail(rawToken);
         String role = extractAndValidateRole(rawToken);
+        String type = extractAndValidateType(rawToken);
 
         validateClaims(rawToken, email, role);
 
-        return new TokenInfo(email, role);
+        return new TokenInfo(email, role, type);
     }
 
 
@@ -95,6 +96,10 @@ public class AuthServiceImpl implements AuthService {
 
         if (!jwtService.isTokenValid(token, email, role)) {
             throw new InvalidResourceException("Refresh token is invalid");
+        }
+
+        if (!jwtService.isRefreshToken(token)) {
+            throw new InvalidResourceException("We can't refresh access token");
         }
 
         User user = userService.findByEmail(email);
@@ -144,9 +149,30 @@ public class AuthServiceImpl implements AuthService {
         return role;
     }
 
+    private String extractAndValidateType(String token) {
+        String type = jwtService.extractType(token);
+        if (type == null || type.isBlank()) {
+            throw new InvalidResourceException("Token does not contain a valid role");
+        }
+        return type;
+    }
+
     private void validateClaims(String token, String expectedEmail, String expectedRole) {
         if (!jwtService.isTokenValid(token, expectedEmail, expectedRole)) {
             throw new InvalidResourceException("Token is invalid");
+        }
+    }
+
+    private String resolveCreatorRole(String token) {
+        if (token == null || token.isBlank()) {
+            return RoleEnum.USER.name();
+        }
+        return jwtService.extractRole(token);
+    }
+
+    private void validateRoleAssignment(String requestedRole, String creatorRole) {
+        if (RoleEnum.ADMIN.name().equals(requestedRole) && !RoleEnum.ADMIN.name().equals(creatorRole)) {
+            throw new AccessDeniedException("Only ADMIN can register ADMIN users");
         }
     }
 

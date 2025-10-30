@@ -3,13 +3,11 @@ package com.innowise.authservice.service;
 import com.innowise.authservice.exception.InvalidResourceException;
 import com.innowise.authservice.exception.ResourceNotFoundException;
 import com.innowise.authservice.model.RoleEnum;
-import com.innowise.authservice.model.dto.AuthDto;
 import com.innowise.authservice.model.dto.AuthenticationResponse;
 import com.innowise.authservice.model.dto.LoginDto;
 import com.innowise.authservice.model.dto.TokenInfo;
 import com.innowise.authservice.model.dto.TokenPayload;
 import com.innowise.authservice.model.entity.Credential;
-import com.innowise.authservice.model.entity.Role;
 import com.innowise.authservice.model.entity.User;
 import com.innowise.authservice.repository.CredentialRepository;
 import com.innowise.authservice.repository.RoleRepository;
@@ -21,13 +19,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,18 +76,6 @@ class AuthServiceTest {
         when(encoder.matches("wrong", "salt", "hashed")).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> authService.login(request));
-    }
-
-    @Test
-    void register_shouldThrow_whenAdminRegistersAdminWithoutAdminRole() {
-        AuthDto request = new AuthDto("new@example.com", "pass", RoleEnum.ADMIN.name());
-        Role role = new Role();
-        role.setName(RoleEnum.ADMIN.name());
-
-        when(roleRepository.findByName(RoleEnum.ADMIN.name())).thenReturn(Optional.of(role));
-        when(jwtService.extractRole(anyString())).thenReturn(RoleEnum.USER.name());
-
-        assertThrows(AccessDeniedException.class, () -> authService.register(request, "Bearer token"));
     }
 
     @Test

@@ -17,8 +17,8 @@ public class ResourceAlreadyUsedException extends RuntimeException {
     @Serial
     private final UUID errorId = UUID.randomUUID();
 
-    public ResourceAlreadyUsedException(String emailAlreadyInUse) {
-        super("Email " + emailAlreadyInUse + " is already in use");
+    public ResourceAlreadyUsedException(String message) {
+        super(message);
     }
 
     public ResourceAlreadyUsedException(String message, Throwable cause) {

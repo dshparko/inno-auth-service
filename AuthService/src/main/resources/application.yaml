@@ -4,7 +4,7 @@ spring:
   application:
     name: UserService
   datasource:
-    url: ${DB_URL}
+    url: ${AUTH_DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -22,3 +22,16 @@ jwt:
     expiration: 3600000
   refresh-token:
     expiration: 604800000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  security:
+    enabled: false
+user-service:
+  url: ${USER_SERVICE_URL}
+  path: /api/v1/users
