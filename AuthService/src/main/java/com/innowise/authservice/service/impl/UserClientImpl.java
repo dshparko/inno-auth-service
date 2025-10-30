@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * @ClassName UserClient
- * @Description Implementation o
+ * @Description  Concrete implementation of {@link UserClient} that communicates with the User Service.
  * @Author dshparko
  * @Date 13.10.2025 21:19
  * @Version 1.0
