@@ -73,7 +73,7 @@ public class UserClientImpl implements UserClient {
         throw new ResourceNotFoundException("User ID not returned from UserService. Status: " + status);
     }
 
-    private String fallbackCreateUser(UserDto userDto, Throwable ex) {
+    private Long fallbackCreateUser(UserDto userDto, Throwable ex) {
         throw new ResourceNotFoundException("User service is unavailable. Reason: " + ex.getMessage());
     }
 }
