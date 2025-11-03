@@ -1,7 +1,7 @@
 package com.innowise.authservice.secutiry;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import io.jsonwebtoken.Claims;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.function.Function;
 
@@ -36,7 +36,7 @@ public interface JwtService {
      * @param token the JWT token
      * @return email string
      */
-    String extractEmail(String token);
+    String extractUserId(String token);
 
     /**
      * Extracts the role claim from the given token.
@@ -51,10 +51,14 @@ public interface JwtService {
      *
      * @param token the JWT token
      * @param email the expected email
-     * @param role the expected role
+     * @param role  the expected role
      * @return true if valid, false otherwise
      */
     boolean isTokenValid(String token, String email, String role);
+
+    boolean isRefreshToken(String token);
+
+    String extractType(String token);
 
     /**
      * Extracts a specific claim from the token using a resolver function.

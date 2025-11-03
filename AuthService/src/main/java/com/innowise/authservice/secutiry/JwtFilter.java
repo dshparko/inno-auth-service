@@ -1,5 +1,6 @@
 package com.innowise.authservice.secutiry;
 
+import com.innowise.authservice.exception.AuthServiceException;
 import com.innowise.authservice.model.entity.User;
 import com.innowise.authservice.secutiry.impl.UserPrincipal;
 import com.innowise.authservice.service.UserService;
@@ -11,7 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -48,24 +48,35 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String token = authHeader.substring(7);
-        final String email = jwtService.extractEmail(token);
+        final String token = authHeader.substring(TOKEN_PREFIX.length());
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = userService.findByEmail(email);
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            User user = resolveUserFromToken(token);
             UserPrincipal principal = UserPrincipal.of(user);
 
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 
-            if (jwtService.isTokenValid(token, principal.getUsername(), principal.getAuthorities().toString())) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(user, null, principal.getAuthorities());
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);
     }
+
+    private User resolveUserFromToken(String token) {
+        final String id = jwtService.extractUserId(token);
+
+        if (id == null || id.isBlank()) {
+            throw new AuthServiceException("Missing user ID in token");
+        }
+
+        try {
+            Long userId = Long.valueOf(id);
+            return userService.findById(userId);
+        } catch (NumberFormatException e) {
+            throw new AuthServiceException("Invalid user ID format in token");
+        }
+    }
+
 }
 

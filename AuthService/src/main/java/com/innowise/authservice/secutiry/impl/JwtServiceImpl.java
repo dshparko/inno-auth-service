@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.innowise.authservice.secutiry.AuthConstant.ACCESS_TYPE;
+import static com.innowise.authservice.secutiry.AuthConstant.REFRESH_TYPE;
+
 /**
  * @ClassName JwtService
  * @Description Service responsible for JWT token generation, validation, and claim extraction.
@@ -37,42 +40,66 @@ public class JwtServiceImpl implements JwtService {
     private long refreshTokenExpirationMs;
 
     public String generateAccessToken(UserDetails user) {
-        return buildToken(user, accessTokenExpirationMs);
+        return buildToken(user, accessTokenExpirationMs, ACCESS_TYPE);
     }
 
     public String generateRefreshToken(UserDetails user) {
-        return buildToken(user, refreshTokenExpirationMs);
+        return buildToken(user, refreshTokenExpirationMs, REFRESH_TYPE);
     }
 
-    private String buildToken(UserDetails user, long expirationMs) {
+    private String buildToken(UserDetails user, long expirationMs, String tokenType) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getAuthorities().stream()
-                .findFirst()
-                .map(GrantedAuthority::getAuthority)
-                .orElse(RoleEnum.USER.name()));
+        Map<String, Object> claims = buildClaims(user, tokenType);
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getUsername())
+                .setSubject(extractUserId(user))
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractEmail(String token) {
+    public boolean isRefreshToken(String token) {
+        return REFRESH_TYPE.equals(extractType(token));
+    }
+
+    private String extractUserId(UserDetails user) {
+        if (user instanceof UserPrincipal principal) {
+            return principal.getId();
+        }
+        throw new IllegalArgumentException("UserDetails must be instance of UserPrincipal");
+    }
+
+    private Map<String, Object> buildClaims(UserDetails user, String tokenType) {
+        Map<String, Object> claims = new HashMap<>();
+        String role = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse(RoleEnum.USER.name());
+
+        claims.put("role", role);
+        claims.put("type", tokenType);
+        return claims;
+    }
+
+
+    public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public boolean isTokenValid(String token, String expectedEmail, String expectedRole) {
-        String extractedEmail = extractEmail(token);
+    public String extractType(String token) {
+        return extractAllClaims(token).get("type", String.class);
+    }
+
+    public boolean isTokenValid(String token, String expectedId, String expectedRole) {
+        String extractedId = extractUserId(token);
         String extractedRole = extractRole(token);
 
-        return extractedEmail != null
+        return extractedId != null
                 && extractedRole != null
-                && extractedEmail.equals(expectedEmail)
+                && extractedId.equals(expectedId)
                 && extractedRole.equals(expectedRole)
                 && !isTokenExpired(token);
     }
