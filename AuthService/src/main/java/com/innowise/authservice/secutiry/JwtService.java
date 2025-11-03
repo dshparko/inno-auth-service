@@ -36,7 +36,7 @@ public interface JwtService {
      * @param token the JWT token
      * @return email string
      */
-    String extractEmail(String token);
+    String extractUserId(String token);
 
     /**
      * Extracts the role claim from the given token.

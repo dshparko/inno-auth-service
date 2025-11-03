@@ -55,9 +55,9 @@ public class UserServiceImpl implements UserService {
         userClient.createUser(request.getUserData(), token);
     }
 
-    public User findByEmail(String email) {
-        return credentialRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + "not found"))
+    public User findById(Long id) {
+        return credentialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + "not found"))
                 .getUser();
     }
 }

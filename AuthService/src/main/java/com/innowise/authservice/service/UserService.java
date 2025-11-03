@@ -31,10 +31,10 @@ public interface UserService {
      * Looks up the credential and returns the associated user entity.
      * </p>
      *
-     * @param email user's email
+     * @param id user's email
      * @return user entity
      * @throws UsernameNotFoundException if no credential is found
      */
-    User findByEmail(String email) throws UsernameNotFoundException;
+    User findById(Long id) throws UsernameNotFoundException;
 }
 

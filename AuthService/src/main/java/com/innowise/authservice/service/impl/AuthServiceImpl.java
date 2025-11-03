@@ -79,30 +79,22 @@ public class AuthServiceImpl implements AuthService {
         String rawToken = extractRawToken(token);
         validateExpiration(rawToken);
 
-        String email = extractAndValidateEmail(rawToken);
+        String id = extractAndValidateId(rawToken);
         String role = extractAndValidateRole(rawToken);
         String type = extractAndValidateType(rawToken);
 
-        validateClaims(rawToken, email, role);
+        validateClaims(rawToken, id, role);
 
-        return new TokenInfo(email, role, type);
+        return new TokenInfo(id, role, type);
     }
 
 
     public AuthenticationResponse refresh(TokenPayload request) {
         String token = request.token();
-        String email = jwtService.extractEmail(token);
-        String role = jwtService.extractRole(token);
 
-        if (!jwtService.isTokenValid(token, email, role)) {
-            throw new InvalidResourceException("Refresh token is invalid");
-        }
+        validateRefreshToken(token);
 
-        if (!jwtService.isRefreshToken(token)) {
-            throw new InvalidResourceException("We can't refresh access token");
-        }
-
-        User user = userService.findByEmail(email);
+        User user = resolveUserFromToken(token);
         UserPrincipal principal = UserPrincipal.of(user);
 
         return new AuthenticationResponse(
@@ -110,6 +102,35 @@ public class AuthServiceImpl implements AuthService {
                 jwtService.generateRefreshToken(principal)
         );
     }
+
+    private User resolveUserFromToken(String token) {
+        String id = jwtService.extractUserId(token);
+
+        if (id == null || id.isBlank()) {
+            throw new InvalidResourceException("Missing user ID in token");
+        }
+
+        try {
+            return userService.findById(Long.valueOf(id));
+        } catch (NumberFormatException e) {
+            throw new InvalidResourceException("Invalid user ID format in token");
+        }
+    }
+
+
+    private void validateRefreshToken(String token) {
+        String id = jwtService.extractUserId(token);
+        String role = jwtService.extractRole(token);
+
+        if (!jwtService.isTokenValid(token, id, role)) {
+            throw new InvalidResourceException("Refresh token is invalid");
+        }
+
+        if (!jwtService.isRefreshToken(token)) {
+            throw new InvalidResourceException("We can't refresh access token");
+        }
+    }
+
 
     private String extractToken(String authHeader) {
         return (authHeader != null && authHeader.startsWith("Bearer "))
@@ -133,8 +154,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-    private String extractAndValidateEmail(String token) {
-        String email = jwtService.extractEmail(token);
+    private String extractAndValidateId(String token) {
+        String email = jwtService.extractUserId(token);
         if (email == null || email.isBlank()) {
             throw new InvalidResourceException("Token does not contain a valid email");
         }

@@ -17,6 +17,6 @@ public interface UserClient {
      * @param userDto the user data transfer object containing registration details
      * @param token   the JWT token used for authorization when calling the User Service
      */
-    String createUser(UserDto userDto, String token);
+    Long createUser(UserDto userDto, String token);
 
 }

@@ -55,4 +55,7 @@ public record UserPrincipal(User user) implements UserDetails {
         return new UserPrincipal(user);
     }
 
+    public String getId() {
+        return user.getId().toString();
+    }
 }

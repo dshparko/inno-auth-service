@@ -54,7 +54,7 @@ public class JwtServiceImpl implements JwtService {
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getUsername())
+                .setSubject(extractUserId(user))
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -63,6 +63,13 @@ public class JwtServiceImpl implements JwtService {
 
     public boolean isRefreshToken(String token) {
         return REFRESH_TYPE.equals(extractType(token));
+    }
+
+    private String extractUserId(UserDetails user) {
+        if (user instanceof UserPrincipal principal) {
+            return principal.getId();
+        }
+        throw new IllegalArgumentException("UserDetails must be instance of UserPrincipal");
     }
 
     private Map<String, Object> buildClaims(UserDetails user, String tokenType) {
@@ -78,7 +85,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
 
-    public String extractEmail(String token) {
+    public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -86,13 +93,13 @@ public class JwtServiceImpl implements JwtService {
         return extractAllClaims(token).get("type", String.class);
     }
 
-    public boolean isTokenValid(String token, String expectedEmail, String expectedRole) {
-        String extractedEmail = extractEmail(token);
+    public boolean isTokenValid(String token, String expectedId, String expectedRole) {
+        String extractedId = extractUserId(token);
         String extractedRole = extractRole(token);
 
-        return extractedEmail != null
+        return extractedId != null
                 && extractedRole != null
-                && extractedEmail.equals(expectedEmail)
+                && extractedId.equals(expectedId)
                 && extractedRole.equals(expectedRole)
                 && !isTokenExpired(token);
     }

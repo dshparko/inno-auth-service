@@ -43,7 +43,7 @@ public class UserClientImpl implements UserClient {
 
     @Override
     @CircuitBreaker(name = "userService", fallbackMethod = "fallbackCreateUser")
-    public String createUser(UserDto userDto, String token) {
+    public Long createUser(UserDto userDto, String token) {
         HttpEntity<UserDto> requestEntity = buildRequestEntity(userDto, token);
         String endpoint = userServiceUrl + userApiPath;
 
@@ -52,7 +52,7 @@ public class UserClientImpl implements UserClient {
                 endpoint, requestEntity, UserDto.class
         );
 
-        return extractUserEmail(response);
+        return extractUserId(response);
     }
 
     private HttpEntity<UserDto> buildRequestEntity(UserDto userDto, String token) {
@@ -62,12 +62,12 @@ public class UserClientImpl implements UserClient {
         return new HttpEntity<>(userDto, headers);
     }
 
-    private String extractUserEmail(ResponseEntity<UserDto> response) {
+    private Long extractUserId(ResponseEntity<UserDto> response) {
         HttpStatusCode status = response.getStatusCode();
         UserDto body = response.getBody();
 
-        if (status.is2xxSuccessful() && body != null && body.getEmail() != null && !body.getEmail().isBlank()) {
-            return body.getEmail();
+        if (status.is2xxSuccessful() && body != null && body.getId() != null ) {
+            return body.getId();
         }
 
         throw new ResourceNotFoundException("User ID not returned from UserService. Status: " + status);
